@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PC ELECTRICAL | Admin & Service Portal</title>
+    
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <style>
+        /* --- 1. THEME VARIABLES --- */
+        :root {
+            --bg-body: #050505;
+            --bg-card: #141414;
+            --border: #333;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
+        }
+
+        /* --- 2. LAYOUT --- */
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+        /* --- 3. HEADER --- */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(5,5,5,0.9);
+            position: sticky; top: 0; z-index: 50;
+        }
+        
+        .nav-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.25rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+        .logo i { color: var(--primary); }
+        .user-name { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* --- 4. COMPONENTS --- */
+        .btn { padding: 12px 24px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+        
+        .input-box {
+            width: 100%; padding: 14px; border-radius: 8px;
+            background: #0a0a0a; border: 1px solid var(--border);
+            color: white; font-size: 1rem; margin-bottom: 15px;
+        }
+        .input-box:focus { border-color: var(--primary); }
+
+        /* --- 5. CARDS & GRID --- */
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 40px 0; }
+        .action-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px;
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .action-card:hover { border-color: #555; transform: translateY(-3px); }
+        .action-icon { font-size: 1.8rem; color: var(--primary); }
+
+        /* --- 6. HISTORY LIST --- */
+        .history-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
+            display: flex; flex-direction: column; gap: 12px;
+            position: relative; overflow: hidden;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .history-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); }
+        .card-completed::before { background: var(--success); }
+        .card-pending::before { background: var(--warning); }
+        .card-cancelled::before { background: var(--danger); }
+
+        .status-badge {
+            padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            background: #222; color: #ccc; width: fit-content;
+        }
+        
+        .pay-btn {
+            background: var(--success); color: #000; padding: 8px 16px; 
+            border-radius: 6px; font-weight: 700; text-decoration: none; 
+            display: inline-block; margin-top: 5px;
+        }
+
+        /* --- 7. MODALS --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-box {
+            background: #111; width: 90%; max-width: 500px;
+            padding: 24px; border-radius: 16px; border: 1px solid var(--border);
+            max-height: 90vh; overflow-y: auto;
+        }
+
+        /* --- 8. ADMIN LIST --- */
+        .admin-item {
+            background: #1a1a1a; padding: 12px; border-radius: 8px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="container nav-content">
+            <!-- CLICK LOGO 10 TIMES FOR ADMIN -->
+            <div class="logo" id="secretTrigger">
+                <i class="ri-flashlight-fill"></i> PC ELECTRICAL
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span id="userDisplay" class="user-name">Guest</span>
+                <button id="logoutBtn" class="btn btn-sm btn-outline" style="display:none;" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- AUTH SECTION -->
+    <section id="authSection" class="container" style="margin-top: 60px; max-width: 400px; text-align: center;">
+        <h1 style="font-size: 2rem; margin-bottom: 10px;">Welcome Back</h1>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Login to access your dashboard.</p>
+        
+        <!-- Login -->
+        <div id="loginForm">
+            <input type="email" id="loginEmail" class="input-box" placeholder="Email Address">
+            <input type="password" id="loginPass" class="input-box" placeholder="Password">
+            <button class="btn btn-primary" style="width: 100%;" onclick="handleLogin()">Login</button>
+            <p style="margin-top: 20px; color: #666;">No account? <span style="color:var(--primary); cursor:pointer;" onclick="toggleAuth('signup')">Create Account</span></p>
+        </div>
+
+        <!-- Signup -->
+        <div id="signupForm" style="display:none;">
+            <input type="text" id="signName" class="input-box" placeholder="Full Name">
+            <input type="tel" id="signPhone" class="input-box" placeholder="Phone Number">
+            <input type="email" id="signEmail" class="input-box" placeholder="Email">
+            <input type="text" id="signAddr" class="input-box" placeholder="Address">
+            <input type="password" id="signPass" class="input-box" placeholder="Password">
+            <button class="btn btn-primary" style="width: 100%;" onclick="handleSignup()">Sign Up</button>
+            <p style="margin-top: 20px; color: #666;">Have account? <span style="color:var(--primary); cursor:pointer;" onclick="toggleAuth('login')">Login</span></p>
+        </div>
+    </section>
+
+    <!-- DASHBOARD SECTION -->
+    <section id="dashboardSection" class="container" style="display: none;">
+        <div style="margin: 40px 0; display:flex; justify-content:space-between; align-items:end;">
+            <div>
+                <h1 id="welcomeTitle">Hello</h1>
+                <p style="color:var(--text-muted)">Manage your repairs</p>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('bookingModal')">+ Book New</button>
+        </div>
+
+        <div class="action-grid">
+            <div class="action-card" onclick="openModal('bookingModal')">
+                <i class="ri-calendar-event-line action-icon"></i>
+                <span>Book Service</span>
+            </div>
+            <div class="action-card" onclick="window.open('https://wa.me/919693067558', '_blank')">
+                <i class="ri-whatsapp-line action-icon" style="color:#25D366"></i>
+                <span>WhatsApp</span>
+            </div>
+            <div class="action-card" onclick="window.open('upi://pay?pa=proneetchatterjee2020@oksbi&pn=Proneet&mc=0000&tid=&tr=&cu=INR', '_blank')">
+                <i class="ri-qr-code-line action-icon" style="color:#a855f7"></i>
+                <span>UPI Pay</span>
+            </div>
+        </div>
+
+        <h3 style="color:#666; font-size:0.8rem; text-transform:uppercase; margin-bottom:15px;">Your Service History</h3>
+        <div id="historyList">
+            <p style="text-align: center; color: #555;">Loading records...</p>
+        </div>
+    </section>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- BOOKING MODAL -->
+    <div id="bookingModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="margin-bottom: 20px;">Book Service</h2>
+            
+            <label style="color:#888; font-size:0.8rem;">Service & Date</label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <select id="bkService" class="input-box">
+                    <option>Fan Repair</option>
+                    <option>Washing Machine</option>
+                    <option>Geyser / Heater</option>
+                    <option>Wiring Issue</option>
+                    <option>Other</option>
+                </select>
+                <input type="date" id="bkDate" class="input-box" style="color-scheme: dark;">
+            </div>
+
+            <label style="color:#888; font-size:0.8rem;">Time & Payment</label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <select id="bkTime" class="input-box">
+                    <option>Morning (9-12)</option>
+                    <option>Afternoon (12-4)</option>
+                    <option>Evening (4-8)</option>
+                </select>
+                <select id="bkPayment" class="input-box">
+                    <option>Cash (COD)</option>
+                    <option>UPI / Online</option>
+                </select>
+            </div>
+
+            <label style="color:#888; font-size:0.8rem;">Details</label>
+            <input id="bkName" class="input-box" placeholder="Your Name">
+            <input type="tel" id="bkPhone" class="input-box" placeholder="Phone Number">
+            <input id="bkAddr" class="input-box" placeholder="Address">
+
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" style="flex:1" onclick="confirmBooking()">Confirm</button>
+                <button class="btn btn-outline" style="flex:1" onclick="closeModal('bookingModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PASSWORD MODAL -->
+    <div id="adminAuthModal" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <i class="ri-lock-2-fill" style="font-size: 3rem; color: var(--primary);"></i>
+            <h2 style="margin: 10px 0;">Admin Access</h2>
+            <input type="password" id="adminPassInput" class="input-box" placeholder="Password">
+            <button class="btn btn-primary" style="width: 100%;" onclick="verifyAdminPass()">Unlock</button>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="closeModal('adminAuthModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD MODAL -->
+    <div id="adminPanelModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--primary);">Admin Panel</h2>
+                <button class="btn btn-outline" onclick="closeModal('adminPanelModal')">Close</button>
+            </div>
+
+            <!-- LIVE RECORD LIST -->
+            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <label style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Recent Records</label>
+                <div id="adResults" style="margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                    <p style="text-align:center; color:#555;">Loading live records...</p>
+                </div>
+            </div>
+
+            <!-- ADD/EDIT FORM -->
+            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                <label style="font-size: 0.8rem; color: var(--warning); text-transform: uppercase;">Manage Record</label>
+                <input type="hidden" id="editId">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <input id="adName" class="input-box" placeholder="Repair Name">
+                    <input id="adDate" class="input-box" placeholder="Date">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input id="adPhone" class="input-box" placeholder="Customer Phone">
+                    <input id="adAmt" class="input-box" placeholder="Amount (₹)">
+                </div>
+
+                <select id="adStatus" class="input-box">
+                    <option value="Booked">Booked</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Request on the way">Request on the way</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+
+                <div style="display: flex; gap: 10px;">
+                    <button id="saveBtn" class="btn btn-primary" style="flex: 1;" onclick="saveRecord()">Add Record</button>
+                    <button class="btn btn-outline" onclick="resetAdminForm()">Clear</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ===========================================
+        // ⚠️ YOUR API CONFIGURATION
+        // ===========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCc8EStM8ipp9F6qonvFbHlRiYyAXzCSKQ",
+            authDomain: "pc-electricals.firebaseapp.com",
+            projectId: "pc-electricals",
+            storageBucket: "pc-electricals.firebasestorage.app",
+            messagingSenderId: "972634890564",
+            appId: "1:972634890564:web:b72f7095c182b188d1b711",
+            measurementId: "G-L207X8J70P"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- GLOBAL UTILS ---
+        const ADMIN_PASS = "1234";
+        const USERS_KEY = "pc_users_final_v5";
+        const SESSION_KEY = "pc_sess_final_v5";
+        
+        // Helper to remove spaces from phone numbers
+        const cleanPhone = (phone) => phone.replace(/\s+/g, '').trim();
+
+        const get = (id) => document.getElementById(id);
+        window.openModal = (id) => {
+            get(id).classList.add('active');
+            if(id === 'adminPanelModal') subscribeAdminList(); // Start live listener for admin
+        };
+        window.closeModal = (id) => get(id).classList.remove('active');
+
+        // --- 1. HIDDEN ADMIN TRIGGER ---
+        let clicks = 0; let timer;
+        get('secretTrigger').addEventListener('click', () => {
+            clicks++; clearTimeout(timer); timer = setTimeout(() => { clicks = 0; }, 2000); 
+            if (clicks === 10) { clicks = 0; window.openModal('adminAuthModal'); }
+        });
+
+        window.verifyAdminPass = () => {
+            if(get('adminPassInput').value === ADMIN_PASS) {
+                window.closeModal('adminAuthModal');
+                window.openModal('adminPanelModal');
+                get('adminPassInput').value = '';
+            } else alert("Incorrect Password");
+        };
+
+        // --- 2. AUTH SYSTEM ---
+        function checkSession() {
+            const user = JSON.parse(localStorage.getItem(SESSION_KEY));
+            if (user) {
+                get('authSection').style.display = 'none';
+                get('dashboardSection').style.display = 'block';
+                get('logoutBtn').style.display = 'block';
+                get('userDisplay').textContent = user.name;
+                get('welcomeTitle').textContent = `Hello, ${user.name.split(' ')[0]}`;
+                
+                // Prefill booking
+                get('bkName').value = user.name;
+                get('bkPhone').value = user.phone;
+                get('bkAddr').value = user.address;
+                
+                // LISTEN TO REAL-TIME HISTORY
+                subscribeHistory(user.phone);
+            } else {
+                get('authSection').style.display = 'block';
+                get('dashboardSection').style.display = 'none';
+                get('logoutBtn').style.display = 'none';
+            }
+        }
+
+        window.toggleAuth = (mode) => {
+            get('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+            get('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
+        }
+
+        window.handleLogin = () => {
+            const email = get('loginEmail').value;
+            const pass = get('loginPass').value;
+            const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+            const user = users.find(u => u.email === email && u.pass === pass);
+            if(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); checkSession(); }
+            else alert("Invalid credentials");
+        }
+
+        window.handleSignup = () => {
+            const name = get('signName').value;
+            let phone = get('signPhone').value;
+            const email = get('signEmail').value;
+            const address = get('signAddr').value;
+            const pass = get('signPass').value;
+            
+            if(!name || !phone || !pass) return alert("Fill all fields");
+            
+            phone = cleanPhone(phone); // Clean phone on signup
+
+            const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+            users.push({name, phone, email, address, pass});
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            alert("Account Created! Login now.");
+            window.toggleAuth('login');
+        }
+
+        window.logout = () => { localStorage.removeItem(SESSION_KEY); location.reload(); }
+
+        // --- 3. CUSTOMER REAL-TIME HISTORY ---
+        let historyUnsub = null;
+
+        function subscribeHistory(phone) {
+            const list = get('historyList');
+            list.innerHTML = '<p style="text-align:center; color:#555;">Syncing...</p>';
+            
+            if(historyUnsub) historyUnsub(); // Unsubscribe old
+
+            const safePhone = cleanPhone(phone); // Ensure we query cleaned phone
+            const q = query(collection(db, "history"), where("phone", "==", safePhone), orderBy("createdAt", "desc"));
+
+            historyUnsub = onSnapshot(q, (snapshot) => {
+                if(snapshot.empty) {
+                    list.innerHTML = '<p style="text-align:center; color:#555; padding:20px;">No records yet.</p>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    let statusClass = '';
+                    if(d.status === 'Completed') statusClass = 'card-completed';
+                    else if(d.status === 'Pending') statusClass = 'card-pending';
+                    else if(d.status === 'Cancelled') statusClass = 'card-cancelled';
+
+                    // Pay Button
+                    let payBtn = '';
+                    if(d.status === 'Completed' && d.amount) {
+                        const link = `upi://pay?pa=proneetchatterjee2020@oksbi&pn=Proneet&mc=0000&tid=&tr=&cu=INR&am=${d.amount}`;
+                        payBtn = `<a href="${link}" target="_blank" class="pay-btn">Pay ₹${d.amount}</a>`;
+                    }
+
+                    html += `
+                    <div class="history-card ${statusClass}">
+                        <div class="h-info">
+                            <h3>${d.repairName}</h3>
+                            <div class="h-details">
+                                Date: ${d.date}<br>
+                                Phone: ${d.phone}<br>
+                                Amount: ₹${d.amount || '0'}
+                            </div>
+                            ${payBtn}
+                        </div>
+                        <span class="status-badge">${d.status}</span>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            });
+        }
+
+        // --- 4. BOOKING ---
+        window.confirmBooking = () => {
+            const svc = get('bkService').value;
+            const dt = get('bkDate').value;
+            const tm = get('bkTime').value;
+            const pay = get('bkPayment').value;
+            const nm = get('bkName').value;
+            const ph = get('bkPhone').value;
+            const ad = get('bkAddr').value;
+
+            if(!nm || !ph || !dt) return alert("Missing Details");
+
+            const msg = `*NEW BOOKING*%0A----------------%0AService: ${svc}%0ADate: ${dt}%0ATime: ${tm}%0APay: ${pay}%0AName: ${nm}%0APhone: ${ph}%0AAddress: ${ad}`;
+            window.open(`https://wa.me/919693067558?text=${msg}`, '_blank');
+        }
+
+        // --- 5. ADMIN PANEL (Real-Time) ---
+        let adminUnsub = null;
+
+        function subscribeAdminList() {
+            const list = get('adResults');
+            list.innerHTML = "<p style='text-align:center; color:#555;'>Loading live records...</p>";
+
+            // Listen to last 15 records
+            const q = query(collection(db, "history"), orderBy("createdAt", "desc"), limit(15));
+            
+            if(adminUnsub) adminUnsub();
+
+            adminUnsub = onSnapshot(q, (snapshot) => {
+                if(snapshot.empty) { list.innerHTML = "No records."; return; }
+                
+                let html = '';
+                snapshot.forEach(docSnap => {
+                    const d = docSnap.data();
+                    const safe = JSON.stringify(d).replace(/'/g, "&#39;");
+                    
+                    html += `
+                    <div class="admin-item">
+                        <div>
+                            <div style="color:white; font-weight:600;">${d.repairName}</div>
+                            <div style="font-size:0.8rem; color:#aaa;">${d.phone} • ${d.status}</div>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-sm btn-primary" onclick='fillAdmin("${docSnap.id}", ${safe})'>Edit</button>
+                            <button class="btn btn-sm btn-outline" style="border-color:#ef4444; color:#ef4444;" onclick='delRec("${docSnap.id}")'>Del</button>
+                        </div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            });
+        }
+
+        window.fillAdmin = (id, data) => {
+            get('editId').value = id;
+            get('adName').value = data.repairName;
+            get('adDate').value = data.date;
+            get('adPhone').value = data.phone;
+            get('adAmt').value = data.amount;
+            get('adStatus').value = data.status;
+            
+            const btn = get('saveBtn');
+            btn.textContent = "Update Record";
+            btn.style.background = "#f59e0b"; 
+        }
+
+        window.saveRecord = async () => {
+            const id = get('editId').value;
+            // Clean phone number before saving
+            const phoneClean = cleanPhone(get('adPhone').value);
+
+            const data = {
+                repairName: get('adName').value,
+                date: get('adDate').value,
+                phone: phoneClean, 
+                amount: get('adAmt').value,
+                status: get('adStatus').value,
+                createdAt: new Date().toISOString()
+            };
+
+            if(!data.phone || !data.repairName) return alert("Phone & Name required");
+
+            try {
+                if(id) { await updateDoc(doc(db, "history", id), data); alert("Updated!"); }
+                else { await addDoc(collection(db, "history"), data); alert("Added!"); }
+                
+                window.resetAdminForm();
+                // No need to manually reload, onSnapshot handles it!
+            } catch(e) { console.error(e); alert("Error saving"); }
+        }
+
+        window.delRec = async (id) => {
+            if(confirm("Delete permanently?")) {
+                await deleteDoc(doc(db, "history", id));
+            }
+        }
+
+        window.resetAdminForm = () => {
+            get('editId').value = '';
+            get('adName').value = '';
+            get('adDate').value = '';
+            get('adAmt').value = '';
+            get('saveBtn').textContent = "Add Record";
+            get('saveBtn').style.background = "var(--primary)";
+        }
+
+        checkSession();
+
+    </script>
+</body>
+</html>
